@@ -1,0 +1,9 @@
+[package]
+name = "edb-demo"
+version = "0.1.0"
+authors = ["Andrew Plaza <aplaza@liquidthink.net>"]
+
+[dependencies]
+edb-emul = { git = "https://github.com/ethdbg/edb", branch="compiler"}
+edb-compiler = { git = "https://github.com/ethdbg/edb", branch="compiler"}
+clap = "2.32.0"
