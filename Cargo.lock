@@ -242,7 +242,7 @@ dependencies = [
 [[package]]
 name = "edb-compiler"
 version = "0.1.0"
-source = "git+https://github.com/ethdbg/edb?branch=compiler#8f4dc59694e03297791f3c1462b76dd39a4bb5c8"
+source = "git+https://github.com/ethdbg/edb?branch=compiler#067a5e48ecfedad238749ab113ca83a9930a1015"
 dependencies = [
  "codespan 0.1.3 (registry+https://github.com/rust-lang/crates.io-index)",
  "ethabi 6.0.1 (registry+https://github.com/rust-lang/crates.io-index)",
@@ -278,7 +278,7 @@ dependencies = [
 [[package]]
 name = "edb-emul"
 version = "0.1.0"
-source = "git+https://github.com/ethdbg/edb?branch=compiler#8f4dc59694e03297791f3c1462b76dd39a4bb5c8"
+source = "git+https://github.com/ethdbg/edb?branch=compiler#067a5e48ecfedad238749ab113ca83a9930a1015"
 dependencies = [
  "etcommon-bigint 0.2.9 (registry+https://github.com/rust-lang/crates.io-index)",
  "ethereum-types 0.4.0 (registry+https://github.com/rust-lang/crates.io-index)",

@@ -67,21 +67,30 @@ fn main() {
             "step_back" => {
                 emul.fire(Action::StepBack).expect("Failed to step back");
             },
+            "step_num" => {
+                println!("enter number of steps to take");
+                let steps: u32 = read!();
+                println!("Taking {} steps", steps);
+                for i in 0..=steps {
+                    emul.fire(Action::StepForward).expect("Failed to step forward");
+                }
+            },
             "bp" => {
                 println!("Enter Breakpoint:" );
                 let bp: u32 = read!();
                 println!("setting breakpoint at line: {}", bp);
             }
             "print" => { // prints current line
-                let pos = emul.pc();
-                let (line_num, line_str) = sol.get_current_line(pos.expect("No PC").position() as u32);
+                let pos = emul.pc().expect("NO PC");
+                info!("Current PC: {}", pos.opcode_position());
+                let (line_num, line_str) = sol.get_current_line(pos.opcode_position() as u32);
                 println!("{}  {}", line_num, line_str);
             },
             "stack" => {
                 emul.read_raw(|vm| {
                     let state = vm.current_state().expect("Could not acquire current state");
                     let stack = &state.stack;
-                    for i in 0..=stack.len() {
+                    for i in 0..stack.len() {
                         println!("{}, {:#x}", i, stack.peek(i).unwrap());
                     }
                     Ok(())
