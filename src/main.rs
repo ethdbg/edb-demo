@@ -22,7 +22,8 @@ use web3::types::{BlockId, BlockNumber};
 use web3::contract::{Contract, Options};
 use std::time;
 use rustc_hex::FromHex;
-
+use edb_compiler::SourceMap;
+use std::path::PathBuf;
 fn main() {
     pretty_env_logger::init();
     let matches = App::new("Welcome to EDB -- The Demo")
@@ -46,10 +47,12 @@ fn main() {
     let contract = ethabi::Contract::load(include_bytes!("./simple.abi") as &[u8]).expect("Could not load abi");
     let (header, tx) = create_mock_transactions(&client, addr, contract);
     
-    let emul = Emulator::new(tx, header, client);
+    
     println!("The file path is: {}", file_path);
     println!("Dropping into TUI");
-    
+    let mut emul = Emulator::new(tx, header, client);
+    let sol = edb_compiler::solidity::Solidity::new(PathBuf::from(file_path));
+    emul.fire(Action::StepForward).expect("Preliminary step forward failed"); 
 
     'main: loop {
         let current_input: String = read!();
@@ -59,30 +62,41 @@ fn main() {
                 println!("Sending Mock Transaction");
             },
             "step" => {
-                println!("Hello from step!");    
+                emul.fire(Action::StepForward).expect("Failed to step forward");
+            },
+            "step_back" => {
+                emul.fire(Action::StepBack).expect("Failed to step back");
             },
             "bp" => {
                 println!("Enter Breakpoint:" );
                 let bp: u32 = read!();
                 println!("setting breakpoint at line: {}", bp);
             }
-            "print" => {
-                println!("Hello from print!");
+            "print" => { // prints current line
+                let pos = emul.pc();
+                let (line_num, line_str) = sol.get_current_line(pos.expect("No PC").position() as u32);
+                println!("{}  {}", line_num, line_str);
             },
             "stack" => {
-                println!("Hello from stack!");
+                emul.read_raw(|vm| {
+                    let state = vm.current_state().expect("Could not acquire current state");
+                    let stack = &state.stack;
+                    for i in 0..=stack.len() {
+                        println!("{}, {:#x}", i, stack.peek(i).unwrap());
+                    }
+                    Ok(())
+                });
             },
             _=> { }
         };
     }
     
     println!("Leaving EDB Demo. Bye!");
-
 }
 
 
 fn create_mock_transactions(client: &web3::Web3<web3::transports::Http>, addr: web3::types::Address, abi: ethabi::Contract) -> (HeaderParams, ValidTransaction) {
-    let set = abi.function("set").unwrap().encode_input(&[]).unwrap();
+    let set = abi.function("set").expect("no Set ABI").encode_input(&[ethabi::Token::Uint(web3::types::U256::from("1337"))]).expect("No Encode Input");
     let acc_one = get_account(client, 1);
     let tx = ValidTransaction {
         caller: Some(bigint::H160(acc_one.0)),
