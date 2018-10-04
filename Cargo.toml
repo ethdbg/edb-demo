@@ -4,14 +4,15 @@ version = "0.1.0"
 authors = ["Andrew Plaza <aplaza@liquidthink.net>"]
 
 [dependencies]
-edb-emul = { git = "https://github.com/ethdbg/edb", branch="compiler"}
-edb-compiler = { git = "https://github.com/ethdbg/edb", branch="compiler"}
+edb-core = { path = "../edb/edb-core" }
 clap = "2.32.0"
 text_io = "0.1.7"
-web3 = "0.4.0"
+web3 = { path = "../../rust-web3" }
 sputnikvm = "0.10.1"
 ethabi = "*"
 etcommon-bigint = "0.2.9"
 rustc-hex = "1.0"
 log = "*"
 pretty_env_logger = "*"
+failure = "*"
+openssl = { version = "0.10", features = ["vendored"]}
