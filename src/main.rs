@@ -67,6 +67,7 @@ fn prog(file_path: &str) -> Result<(), Error> {
 
     let (_eloop, http) = web3::transports::Http::new("http://localhost:8545").unwrap();
     let client = web3::Web3::new(http);
+    debug!("Created web3 client, deploying SimpleStorage");
     let addr = deploy_simple(&client);
     let contract = ethabi::Contract::load(include_bytes!("./simple.abi") as &[u8]).expect("Could not load abi");
     let (header, tx) = create_mock_transactions(&client, addr, contract);
@@ -151,8 +152,9 @@ fn create_mock_transactions(client: &web3::Web3<web3::transports::Http>, addr: w
 fn deploy_simple(client: &web3::Web3<web3::transports::Http>) -> web3::types::Address {
 
     let accounts = client.eth().accounts().wait().expect("Could not get acounts");
-
+    info!("Accounts: {:?}", accounts);
     let balance = client.eth().balance(accounts[0], None).wait().expect("Could not get balance");
+    info!("Balance: {:?}", balance);
     let code: Vec<u8> = include_str!("./simple.bin")
         .from_hex()
         .unwrap();
@@ -161,7 +163,7 @@ fn deploy_simple(client: &web3::Web3<web3::transports::Http>) -> web3::types::Ad
         .confirmations(0)
         .poll_interval(time::Duration::from_secs(10))
         .options(Options::with(|opt| {
-            opt.gas = Some(3_000_000.into())
+            opt.gas = Some(1000.into())
         }))
         .execute(code, (), accounts[0])
         .expect("Could not execute")
