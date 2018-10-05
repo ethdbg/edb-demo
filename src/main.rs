@@ -1,10 +1,11 @@
 //! A Quick and Dirty Demo to have something to present
 #[macro_use] extern crate log;
-extern crate pretty_env_logger;
+#[macro_use] extern crate text_io;
+extern crate fern;
+extern crate chrono;
 extern crate edb_core;
 extern crate clap;
 extern crate web3;
-#[macro_use] extern crate text_io;
 extern crate ethabi;
 extern crate bigint;
 extern crate sputnikvm;
@@ -14,32 +15,18 @@ extern crate failure;
 use edb_core::{Debugger, Solidity};
 use failure::Error;
 use clap::{Arg, App};
-use sputnikvm::{ValidTransaction, HeaderParams, TransactionAction, VM};
-use ethabi::{Address, Token};
+use sputnikvm::{ValidTransaction, HeaderParams, TransactionAction};
 use std::rc::Rc;
-use std::str::FromStr;
 use web3::futures::Future;
 use web3::types::{BlockId, BlockNumber};
 use web3::contract::{Contract, Options};
 use std::time;
 use rustc_hex::FromHex;
 use std::path::PathBuf;
+use fern::colors::{Color, ColoredLevelConfig};
 
 fn main() {
-    let res = prog();
 
-    match res {
-        Ok(v) => println!("Exited without error"),
-        Err(e) => {
-            error!("{}", e);
-            error!("Exited with error");
-        }
-    }
-}
-
-
-fn prog() -> Result<(), Error> {
-    pretty_env_logger::init();
     let matches = App::new("Welcome to EDB -- The Demo")
         .version("0.0.1-pre-historic")
         .author("Andrew P. <aplaza@liquidthink.net>")
@@ -50,10 +37,33 @@ fn prog() -> Result<(), Error> {
              .value_name("FILE")
              .help("file to debug")
              .takes_value(true))
+        .arg(Arg::with_name("log_level")
+             .short("v")
+             .multiple(true)
+             .help("Sets level of verbosity"))
         .get_matches();
-
     let file_path = matches.value_of("file").unwrap();
 
+    match matches.occurrences_of("v") {
+        0 => init_logger(log::LevelFilter::Error),
+        1 => init_logger(log::LevelFilter::Warn),
+        2 => init_logger(log::LevelFilter::Info),
+        3 => init_logger(log::LevelFilter::Debug),
+        _ => init_logger(log::LevelFilter::Trace),
+    };
+
+
+    let res = prog(file_path);
+    match res {
+        Ok(_) => println!("Exited without error"),
+        Err(e) => {
+            error!("{}", e);
+        }
+    }
+}
+
+
+fn prog(file_path: &str) -> Result<(), Error> {
 
     let (_eloop, http) = web3::transports::Http::new("http://localhost:8545").unwrap();
     let client = web3::Web3::new(http);
@@ -66,9 +76,6 @@ fn prog() -> Result<(), Error> {
 
     let mut file = Debugger::new(PathBuf::from(file_path), Solidity::default(), client, tx, header)?;
 
-    file.set_breakpoint(11);
-    file.run(Some("SimpleStorage"));
-/*
     'main: loop {
         let current_input: String = read!();
         match current_input.as_str() {
@@ -76,8 +83,8 @@ fn prog() -> Result<(), Error> {
             "run" => {
                 println!("Sending Mock Transaction");
                 println!("Enter name of contract: ");
- //               let name: String = read!();
-                file.run(Some("SimpleStorage"))?;
+                let name: String = read!();
+                file.run(Some(&name))?;
             },
             "step" => {
                 file.step()?;
@@ -88,15 +95,15 @@ fn prog() -> Result<(), Error> {
             },
             "step_num" => {
                 print!("enter number of steps to take ");
-                // let steps: usize = read!();
+                let steps: usize = read!();
                 println!("Taking {} steps", steps);
-                for i in 0..=3 {
+                for _ in 0..=steps {
                     file.step()?;
                 }
             },
             "break" => {
                 // println!("Enter Breakpoint:" );
-                // let bp: usize = read!();
+                let bp: usize = read!();
                 println!("setting breakpoint at line: {}", bp);
                 file.set_breakpoint(bp)?;
             }
@@ -119,7 +126,7 @@ fn prog() -> Result<(), Error> {
             _=> { }
         };
     }
-*/
+
     println!("Leaving EDB Demo. Bye!");
     Ok(())
 }
@@ -180,6 +187,40 @@ fn get_headers(client: &web3::Web3<web3::transports::Http>) -> HeaderParams {
         difficulty: bigint::U256(block.difficulty.0),
         gas_limit: bigint::Gas::from(block.gas_limit.as_u64())
     }
+}
+
+
+fn init_logger(level: log::LevelFilter) {
+    let colors = ColoredLevelConfig::new()
+        .info(Color::Green)
+        .warn(Color::Yellow)
+        .error(Color::Red)
+        .trace(Color::Magenta);
+
+    fern::Dispatch::new()
+        .format(move |out, message, record| {
+            out.finish(format_args!(
+                    "{} [{}][{}] {} ::{:?};{:?}",
+                    chrono::Local::now().format("[%Y-%m-%d][%H:%M:%S]"),
+                    record.target(),
+                    colors.color(record.level()),
+                    message,
+                    record.file(),
+                    record.line()
+                ))
+        })
+        .chain(
+            fern::Dispatch::new()
+            .level(log::LevelFilter::Info)
+            .level_for("edb-core", log::LevelFilter::Debug)
+            .chain(fern::log_file("edb.logs").expect("No EDB.logs"))
+        )
+        .chain(
+            fern::Dispatch::new()
+            .level(level)
+            .chain(std::io::stdout())
+        )
+        .apply().expect("Could not init logging");
 }
 
 
