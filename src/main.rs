@@ -136,7 +136,7 @@ fn prog(file_path: &str) -> Result<(), Error> {
 
 fn create_mock_transactions(client: &web3::Web3<web3::transports::Http>, addr: web3::types::Address, abi: ethabi::Contract) -> (HeaderParams, ValidTransaction) {
     let set = abi.function("set").expect("no Set ABI").encode_input(&[ethabi::Token::Uint(web3::types::U256::from("1337"))]).expect("No Encode Input");
-    let acc_one = get_account(client, 1);
+    let acc_one = get_account(client, 0);
     let tx = ValidTransaction {
         caller: Some(bigint::H160(acc_one.0)),
         gas_price: bigint::Gas::one(),

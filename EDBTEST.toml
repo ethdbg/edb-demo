@@ -1,0 +1,54 @@
+# This config should be placed in following path:
+#   ~/.local/share/io.parity.ethereum/config.toml
+
+[parity]
+# Auto-updates to every release
+auto_update = "all"
+# Beta
+release_track = "beta"
+# Blockchain and settings will be stored in ./.parity-data.
+base_path = "./.parity-data"
+# You will be identified as 'EDBTestNode' amongst other nodes..
+identity = "EDBTestNode"
+# Local Development Chain
+chain = "dev"
+# Don't save pending local transactions to disk to be restored whenever the node restarts.
+no_persistent_txqueue = true
+
+[network]
+# Parity will sync by downloading latest state first. Node will be operational in couple minutes.
+warp = false
+# Parity will try to maintain connection to at least  peers.
+min_peers = 0
+# Enable or disable new peers discovery.
+discovery = false
+
+[rpc]
+server_threads = 2
+# Only selected APIs will be exposed over this interface.
+apis = ["web3", "eth", "pubsub", "net", "parity", "private", "parity_pubsub", "traces", "rpc", "shh", "shh_pubsub", "personal", "parity_accounts"]
+
+
+[footprint]
+# Will keep up to 128 old state entries.
+pruning_history = 128
+# Will keep up to 64 MB old state entries.
+pruning_memory = 64
+# Will keep up to 16MB data in Blockchain cache.
+cache_size_blocks = 16
+
+[whisper]
+# Enable the Whisper network.
+enabled = false
+# Target size of the whisper message pool in megabytes.
+pool_size = 20
+
+[account]
+# From: [0x004385d8be6140e6f889833f68b51e17b6eacb29] you'll be able to send transactions without password.
+unlock = ["0x004385d8be6140e6f889833f68b51e17b6eacb29"]
+# File at ./pass should contain passwords to unlock your accounts. One password per line.
+password = ["./pass"]
+# Disables hardware wallet support.
+disable_hardware = true
+# Use drastically faster unlocking mode. This setting causes raw secrets to be stored unprotected in memory, so use with care.
+fast_unlock = true
