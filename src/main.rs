@@ -67,9 +67,10 @@ fn prog(file_path: &str) -> Result<(), Error> {
 
     let (_eloop, http) = web3::transports::Http::new("http://localhost:8545").unwrap();
     let client = web3::Web3::new(http);
-    debug!("Created web3 client, deploying SimpleStorage");
+    info!("Created web3 client, deploying SimpleStorage");
     let addr = deploy_simple(&client);
     let contract = ethabi::Contract::load(include_bytes!("./simple.abi") as &[u8]).expect("Could not load abi");
+    info!("Creating mock transactions");
     let (header, tx) = create_mock_transactions(&client, addr, contract);
 
     println!("The file path is: {}", file_path);
@@ -158,12 +159,12 @@ fn deploy_simple(client: &web3::Web3<web3::transports::Http>) -> web3::types::Ad
     let code: Vec<u8> = include_str!("./simple.bin")
         .from_hex()
         .unwrap();
+    info!("Deploying Contract");
     let contract = Contract::deploy(client.eth(), include_bytes!("./simple.abi"))
         .expect("Could not deploy step 1")
         .confirmations(0)
-        .poll_interval(time::Duration::from_secs(10))
         .options(Options::with(|opt| {
-            opt.gas = Some(1000.into())
+            opt.gas_price = Some(0.into())
         }))
         .execute(code, (), accounts[0])
         .expect("Could not execute")
@@ -215,6 +216,7 @@ fn init_logger(level: log::LevelFilter) {
             fern::Dispatch::new()
             .level(log::LevelFilter::Info)
             .level_for("edb-core", log::LevelFilter::Debug)
+            .level_for("edb-demo", log::LevelFilter::Debug)
             .chain(fern::log_file("edb.logs").expect("No EDB.logs"))
         )
         .chain(
