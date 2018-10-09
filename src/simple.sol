@@ -8,7 +8,10 @@ contract SimpleStorage {
     uint y;
     function set(uint x) {
         storedData = x;
-        someNumber = x + 10;
+        someNumber = 0;
+        while (someNumber < (x/2)) {
+            someNumber = someNumber + 1;
+        }
         hello = "Greetings from Simple Storage";
         anotherNumber = someNumber + 100;
         y = x / 2;
