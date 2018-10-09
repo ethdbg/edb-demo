@@ -36,14 +36,22 @@ fn main() {
              .long("file")
              .value_name("FILE")
              .help("file to debug")
-             .takes_value(true))
+             .takes_value(true)
+             .required(true))
+        .arg(Arg::with_name("contract")
+             .short("c")
+             .long("contract")
+             .value_name("CONTRACT")
+             .help("Name of contract being debugged")
+             .takes_value(true)
+             .required(true))
         .arg(Arg::with_name("log_level")
              .short("v")
              .multiple(true)
              .help("Sets level of verbosity"))
         .get_matches();
     let file_path = matches.value_of("file").unwrap();
-
+    let contract = matches.value_of("contract").unwrap();
     match matches.occurrences_of("v") {
         0 => init_logger(log::LevelFilter::Error),
         1 => init_logger(log::LevelFilter::Warn),
@@ -53,17 +61,17 @@ fn main() {
     };
 
 
-    let res = prog(file_path);
+    let res = prog(file_path,contract);
     match res {
         Ok(_) => println!("Exited without error"),
         Err(e) => {
-            error!("{}", e);
+            error!("{}", e); // explicitly logs the error
         }
     }
 }
 
 
-fn prog(file_path: &str) -> Result<(), Error> {
+fn prog(file_path: &str, contract_name: &str) -> Result<(), Error> {
 
     let (_eloop, http) = web3::transports::Http::new("http://localhost:8545").unwrap();
     let client = web3::Web3::new(http);
@@ -76,17 +84,14 @@ fn prog(file_path: &str) -> Result<(), Error> {
     println!("The file path is: {}", file_path);
     println!("Dropping into TUI");
 
-    let mut file = Debugger::new(PathBuf::from(file_path), Solidity::default(), client, tx, header)?;
+    let mut file = Debugger::new(PathBuf::from(file_path), Solidity::default(), client, tx, header, contract_name)?;
 
     'main: loop {
         let current_input: String = read!();
         match current_input.as_str() {
             "q"|"quit"|"exit" => break 'main,
             "run" => {
-                println!("Sending Mock Transaction");
-                println!("Enter name of contract: ");
-                let name: String = read!();
-                file.run(Some(&name))?;
+                file.run()?;
             },
             "step" => {
                 file.step()?;
