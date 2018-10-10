@@ -119,16 +119,10 @@ fn prog(file_path: &str, contract_name: &str) -> Result<(), Error> {
                 println!("{}: {}", line, stri);
             },
             "stack" => {
-                /*emul.read_raw(|vm| {
-                    let state = vm.current_state().expect("Could not acquire current state");
-                    let stack = &state.stack;
-                    for i in 0..stack.len() {
-                        println!("{}, {:#x}", i, stack.peek(i).unwrap());
-                    }
-                    Ok(())
-                });
-                */
-                println!("Nothing");
+                let stack = file.stack()?;
+                stack.iter().enumerate().for_each(|(i, x)| {
+                    println!("item {}: hex: {:#x}; base10 {}", i, x, x.as_u64());
+                })
             },
             _=> { }
         };
