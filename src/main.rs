@@ -217,7 +217,7 @@ fn init_logger(level: log::LevelFilter) {
             .level(log::LevelFilter::Info)
             .level_for("edb_compiler", log::LevelFilter::Trace)
             .level_for("edb_emul", log::LevelFilter::Debug)
-            .level_for("edb_core", log::LevelFilter::Debug)
+            .level_for("edb_core", log::LevelFilter::Trace)
             .level_for("edb_demo", log::LevelFilter::Debug)
             .chain(fern::log_file("edb.logs").expect("No EDB.logs"))
         )

@@ -15,6 +15,9 @@ contract SimpleStorage {
         hello = "Greetings from Simple Storage";
         anotherNumber = someNumber + 100;
         y = x / 2;
+        if (y > anotherNumber) {
+            hello = "Hello Greater Than";
+        }
     }
 
     function get() constant returns (uint) {
