@@ -5,8 +5,9 @@ contract SimpleStorage {
     uint someNumber;
     uint anotherNumber;
     string hello;
-    uint y;
+
     function set(uint x) {
+        uint y;
         storedData = x;
         someNumber = 0;
         while (someNumber < (10/2)) {
