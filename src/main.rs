@@ -20,7 +20,6 @@ use std::rc::Rc;
 use web3::futures::Future;
 use web3::types::{BlockId, BlockNumber};
 use web3::contract::{Contract, Options};
-use std::time;
 use rustc_hex::FromHex;
 use std::path::PathBuf;
 use fern::colors::{Color, ColoredLevelConfig};
@@ -76,15 +75,16 @@ fn prog(file_path: &str, contract_name: &str) -> Result<(), Error> {
     let (_eloop, http) = web3::transports::Http::new("http://localhost:8545").unwrap();
     let client = web3::Web3::new(http);
     info!("Created web3 client, deploying SimpleStorage");
-    let addr = deploy_simple(&client);
+    let deployed_contract = deploy_simple(&client);
+    let addr = deployed_contract.address();
     let contract = ethabi::Contract::load(include_bytes!("./simple.abi") as &[u8]).expect("Could not load abi");
     info!("Creating mock transactions");
-    let (header, tx) = create_mock_transactions(&client, addr, contract);
+    let (header, tx) = create_mock_transactions(&client, addr, contract.clone());
 
     println!("The file path is: {}", file_path);
     println!("Dropping into TUI");
 
-    let mut file = Debugger::new(PathBuf::from(file_path), Solidity::default(), client, tx, header, contract_name)?;
+    let mut file = Debugger::new(PathBuf::from(file_path), Solidity::default(), client.clone(), tx, header, contract_name)?;
 
     'main: loop {
         let current_input: String = read!();
@@ -94,7 +94,7 @@ fn prog(file_path: &str, contract_name: &str) -> Result<(), Error> {
                 file.run()?;
             },
             "step" => {
-                file.step()?;
+                file.step_forward()?;
             },
             "step_back" => {
                 // emul.fire(Action::StepBack).expect("Failed to step back");
@@ -105,8 +105,11 @@ fn prog(file_path: &str, contract_name: &str) -> Result<(), Error> {
                 let steps: usize = read!();
                 println!("Taking {} steps", steps);
                 for _ in 0..=steps {
-                    file.step()?;
+                    file.step_forward()?;
                 }
+            },
+            "exec" => {
+                file.run_to_end()?;
             },
             "break" => {
                 // println!("Enter Breakpoint:" );
@@ -127,7 +130,12 @@ fn prog(file_path: &str, contract_name: &str) -> Result<(), Error> {
             _=> { }
         };
     }
+        // let (header, tx) = create_mock_transactions(&client, addr, contract);
 
+    let (header, tx) = create_get_tx(&client, addr, contract);
+    file.chain(tx, None);
+    file.run_to_end()?;
+    println!("{:#x?}", file.output());
     println!("Leaving EDB Demo. Bye!");
     Ok(())
 }
@@ -148,8 +156,23 @@ fn create_mock_transactions(client: &web3::Web3<web3::transports::Http>, addr: w
     (get_headers(client), tx)
 }
 
+fn create_get_tx(client: &web3::Web3<web3::transports::Http>, addr: web3::types::Address, abi: ethabi::Contract) -> (HeaderParams, ValidTransaction) {
+    let set = abi.function("get").expect("no Set ABI").encode_input(&[]).expect("No Encode Input");
+    let acc_zero = get_account(client, 0);
+    let tx = ValidTransaction {
+        caller: Some(bigint::H160(acc_zero.0)),
+        gas_price: bigint::Gas::one(),
+        gas_limit: bigint::Gas::from(10000000 as u64),
+        action: TransactionAction::Call(bigint::H160(addr.0)),
+        value: bigint::U256::zero(),
+        input: Rc::new(set),
+        nonce: bigint::U256::zero(),
+    };
+    (get_headers(client), tx)
+}
 
-fn deploy_simple(client: &web3::Web3<web3::transports::Http>) -> web3::types::Address {
+
+fn deploy_simple(client: &web3::Web3<web3::transports::Http>) -> web3::contract::Contract<web3::transports::Http> {
 
     let accounts = client.eth().accounts().wait().expect("Could not get acounts");
     info!("Accounts: {:?}", accounts);
@@ -170,7 +193,7 @@ fn deploy_simple(client: &web3::Web3<web3::transports::Http>) -> web3::types::Ad
         .wait()
         .expect("Could not wait");
     info!("Contract Address: {:?}", contract.address());
-    contract.address()
+    contract
 }
 
 fn get_account(client: &web3::Web3<web3::transports::Http>, idx: usize) -> web3::types::Address {

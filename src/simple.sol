@@ -1,4 +1,4 @@
-pragma solidity ^0.4.0;
+pragma solidity ^0.4.25;
 
 contract SimpleStorage {
     uint storedData;
@@ -6,7 +6,7 @@ contract SimpleStorage {
     uint anotherNumber;
     string hello;
 
-    function set(uint x) {
+    function set(uint x) public {
         uint y;
         storedData = x;
         someNumber = 0;
@@ -19,9 +19,10 @@ contract SimpleStorage {
         if (y > anotherNumber) {
             hello = "Hello Greater Than";
         }
+        storedData = 4919;
     }
 
-    function get() constant returns (uint) {
+    function get() view public returns (uint) {
         return storedData;
     }
 }

@@ -4,7 +4,7 @@ version = "0.1.0"
 authors = ["Andrew Plaza <aplaza@liquidthink.net>"]
 
 [dependencies]
-edb-core = { path = "../edb/edb-core" }
+edb-core = { path = "../edb/core" }
 clap = "2.32.0"
 text_io = "0.1.7"
 web3 = { git = "https://github.com/InsidiousMind/rust-web3", branch = "bytes-deser" }
