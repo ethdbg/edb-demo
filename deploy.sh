@@ -1,6 +1,6 @@
 #!/bin/bash
 
-tmux new -d -sEDBTestNode parity --chain dev-conf.json --reseal-min-period 0 --min-gas-price 0 -l INFO --jsonrpc-apis=all --config ./EDBTEST.toml
+tmux new -d -sEDBTestNode ../parity-ethereum/target/release/parity --chain dev-conf.json --reseal-min-period 0 --min-gas-price 0 -l INFO --jsonrpc-apis=all --config ./EDBTEST.toml
 
 echo "Parity node booting ...."
 sleep 3

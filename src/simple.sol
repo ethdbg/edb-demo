@@ -1,4 +1,4 @@
-pragma solidity ^0.4.25;
+pragma solidity ^0.4.5;
 
 contract SimpleStorage {
     uint storedData;
@@ -7,11 +7,10 @@ contract SimpleStorage {
     string hello;
 
     function set(uint x) public {
-        uint y;
+        uint y = 0;
         storedData = x;
-        someNumber = 0;
-        while (someNumber < (10/2)) {
-            someNumber = someNumber + 1;
+        while (y < storedData) {
+            y = y + 1;
         }
         hello = "Greetings from Simple Storage";
         anotherNumber = someNumber + 100;

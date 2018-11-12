@@ -124,15 +124,31 @@ fn prog(file_path: &str, contract_name: &str) -> Result<(), Error> {
             "stack" => {
                 let stack = file.stack()?;
                 stack.iter().enumerate().for_each(|(i, x)| {
-                    println!("item {}: hex: {:#x}; base10 {}", i, x, x.as_u64());
+                    println!("item {}: hex: {:#x};", i, x);
                 })
             },
+            "memory" | "mem" => {
+                let mem = file.memory()?;
+                mem.iter().enumerate().for_each(|(i, x)| {
+                    println!("item: {}: hex: {:#x};", i, x);
+                })
+            }
+            "storage" | "storg" => {
+                let storg = file.storage();
+                if storg.is_none() {
+                    println!("none");
+                } else {
+                    storg.unwrap().iter().for_each(|(k,v)| {
+                        println!("{}: 0x{:#x}", k, v);
+                    });
+                }
+            }
             _=> { }
         };
     }
         // let (header, tx) = create_mock_transactions(&client, addr, contract);
 
-    let (header, tx) = create_get_tx(&client, addr, contract);
+    let (_, tx) = create_get_tx(&client, addr, contract);
     file.chain(tx, None);
     file.run_to_end()?;
     println!("{:#x?}", file.output());
@@ -142,7 +158,7 @@ fn prog(file_path: &str, contract_name: &str) -> Result<(), Error> {
 
 
 fn create_mock_transactions(client: &web3::Web3<web3::transports::Http>, addr: web3::types::Address, abi: ethabi::Contract) -> (HeaderParams, ValidTransaction) {
-    let set = abi.function("set").expect("no Set ABI").encode_input(&[ethabi::Token::Uint(web3::types::U256::from("1337"))]).expect("No Encode Input");
+    let set = abi.function("set").expect("no Set ABI").encode_input(&[ethabi::Token::Uint(web3::types::U256::from("100"))]).expect("No Encode Input");
     let acc_one = get_account(client, 0);
     let tx = ValidTransaction {
         caller: Some(bigint::H160(acc_one.0)),

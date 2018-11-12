@@ -7,7 +7,6 @@ authors = ["Andrew Plaza <aplaza@liquidthink.net>"]
 edb-core = { path = "../edb/core" }
 clap = "2.32.0"
 text_io = "0.1.7"
-web3 = { git = "https://github.com/InsidiousMind/rust-web3", branch = "bytes-deser" }
 sputnikvm = "0.10.1"
 ethabi = "*"
 etcommon-bigint = "0.2.9"
@@ -16,4 +15,4 @@ log = "*"
 fern = { version = "0.5.6", features = ["colored"]}
 chrono = "0.4"
 failure = "*"
-openssl = { version = "0.10", features = ["vendored"]}
+web3 = { git = "https://github.com/tomusdrw/rust-web3", branch = "master"}
